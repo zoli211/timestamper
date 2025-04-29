@@ -170,28 +170,27 @@ function updateList() {
     li.style.justifyContent = 'space-between';
     li.style.alignItems = 'center';
     li.style.padding = '0.5rem 0';
+    li.style.gap = '0.5rem';
 
     const labelButton = document.createElement('button');
     labelButton.style.display = 'flex';
-    labelButton.style.gap = '0.5rem';
     labelButton.style.alignItems = 'center';
+    labelButton.style.gap = '0.5rem';
     labelButton.style.background = 'none';
     labelButton.style.border = 'none';
-    labelButton.style.textAlign = 'left';
     labelButton.style.cursor = 'pointer';
-    labelButton.style.flex = '1';
+    labelButton.style.flexGrow = '1';
     labelButton.style.padding = '0';
-    labelButton.setAttribute('aria-label', `Ugrás ide: ${formatTime(time)} – ${label}`);
+    labelButton.style.whiteSpace = 'nowrap';  // <<< EZ fontos, hogy ne törje meg
+    // labelButton.setAttribute('aria-label', `Ugrás ide: ${formatTime(time)} – ${label}`);
 
     const timeSpan = document.createElement('span');
     timeSpan.textContent = formatTime(time);
-    timeSpan.style.minWidth = '4.5rem';
     timeSpan.style.color = '#aaa';
+    timeSpan.style.minWidth = '4.5rem';
 
     const labelSpan = document.createElement('span');
     labelSpan.textContent = label;
-    labelSpan.style.flex = '1';
-    labelSpan.style.wordBreak = 'break-word';
 
     labelButton.appendChild(timeSpan);
     labelButton.appendChild(labelSpan);

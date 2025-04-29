@@ -171,9 +171,10 @@ function updateList() {
     li.style.alignItems = 'center';
     li.style.padding = '0.5rem 0';
 
-    // --- Címke: csak erre kattintva ugrik
     const labelButton = document.createElement('button');
-    labelButton.textContent = `${formatTime(time)} – ${label}`;
+    labelButton.style.display = 'flex';
+    labelButton.style.gap = '0.5rem';
+    labelButton.style.alignItems = 'center';
     labelButton.style.background = 'none';
     labelButton.style.border = 'none';
     labelButton.style.textAlign = 'left';
@@ -182,13 +183,25 @@ function updateList() {
     labelButton.style.padding = '0';
     labelButton.setAttribute('aria-label', `Ugrás ide: ${formatTime(time)} – ${label}`);
 
+    const timeSpan = document.createElement('span');
+    timeSpan.textContent = formatTime(time);
+    timeSpan.style.minWidth = '4.5rem';
+    timeSpan.style.color = '#aaa';
+
+    const labelSpan = document.createElement('span');
+    labelSpan.textContent = label;
+    labelSpan.style.flex = '1';
+    labelSpan.style.wordBreak = 'break-word';
+
+    labelButton.appendChild(timeSpan);
+    labelButton.appendChild(labelSpan);
+
     labelButton.addEventListener('click', (e) => {
       e.preventDefault();
-      audio.currentTime = time;
-      audio.play();
+      audioPlayer.currentTime = time;
+      audioPlayer.play();
     });
 
-    // --- Törlésgomb
     const deleteBtn = document.createElement('button');
     deleteBtn.textContent = '×';
     deleteBtn.setAttribute('aria-label', 'Címke törlése');
@@ -200,7 +213,7 @@ function updateList() {
 
     deleteBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      e.stopPropagation(); // csak biztos, ami biztos
+      e.stopPropagation();
       timestamps.splice(index, 1);
       updateList();
     });

@@ -75,6 +75,7 @@
       padding: 0.5rem;
       border-bottom: 1px solid #333;
       word-break: break-word;
+      position: relative;
     }
 
     .file-group {
@@ -92,6 +93,22 @@
         flex: 1;
       }
     }
+
+    .delete-btn {
+      position: absolute;
+      right: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #f55;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    .delete-btn:hover {
+      color: #faa;
+    }
   </style>
 </head>
 <body>
@@ -102,7 +119,7 @@
       <label for="labelFile">Címkefájl kiválasztása</label> <input type="file" id="labelFile" accept=".txt">
     </div>
     <audio id="audioPlayer" controls></audio>
-    <label for="speedSelect">Sebesség</label>
+    <label for="speedSelect">Lejátszás sebessége</label>
     <select id="speedSelect">
       <option value="1">1x</option>
       <option value="1.25">1.25x</option>
@@ -112,7 +129,7 @@
 
     <label for="labelInput">Címke neve (üres mező esetén = hiba)</label><input type="text" id="labelInput" placeholder="Hiba">
     <button id="timestampButton">Időbélyeg rögzítése</button>
-<h2>Időbélyegek listája</h2>
+    <h2>Időbélyegek listája</h2>
     <ul id="timestampList"></ul>
     <button id="exportButton">Audacity Címkék exportálása (.txt)</button>
   </div>
@@ -129,6 +146,7 @@
 
     let timestamps = [];
     let currentAudioFileName = 'cimkek';
+    let pendingSeekTime = null;
 
     function formatTime(seconds) {
       const h = Math.floor(seconds / 3600);
@@ -144,9 +162,20 @@
 
     function updateList() {
       timestampList.innerHTML = '';
-      timestamps.forEach(({ time, label }) => {
+      timestamps.forEach(({ time, label }, index) => {
         const li = document.createElement('li');
         li.textContent = `${formatTime(time)} – ${label}`;
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = '×';
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.setAttribute('aria-label', 'Törlés');
+        deleteBtn.addEventListener('click', () => {
+          timestamps.splice(index, 1);
+          updateList();
+        });
+
+        li.appendChild(deleteBtn);
         timestampList.appendChild(li);
       });
     }
@@ -200,11 +229,25 @@
               return { time: parseFloat(parts[0]), label: parts[2] || 'hiba' };
             });
           updateList();
+
           if (timestamps.length > 0) {
-            audioPlayer.currentTime = timestamps[timestamps.length - 1].time;
+            const lastTime = timestamps[timestamps.length - 1].time;
+            // Hangfájl betöltés után ugrik oda
+            if (audioPlayer.readyState >= 1) {
+              audioPlayer.currentTime = lastTime;
+            } else {
+              pendingSeekTime = lastTime;
+            }
           }
         };
         reader.readAsText(file);
+      }
+    });
+
+    audioPlayer.addEventListener('loadedmetadata', () => {
+      if (pendingSeekTime !== null) {
+        audioPlayer.currentTime = pendingSeekTime;
+        pendingSeekTime = null;
       }
     });
 

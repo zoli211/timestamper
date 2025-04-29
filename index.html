@@ -163,6 +163,7 @@
 
 function updateList() {
   timestampList.innerHTML = '';
+
   timestamps.forEach(({ time, label }, index) => {
     const li = document.createElement('li');
     li.style.display = 'flex';
@@ -170,21 +171,26 @@ function updateList() {
     li.style.alignItems = 'center';
     li.style.padding = '0.5rem 0';
 
-    const labelSpan = document.createElement('span');
-    labelSpan.textContent = `${formatTime(time)} – ${label}`;
-    labelSpan.style.cursor = 'pointer';
-    labelSpan.tabIndex = 0;
-    labelSpan.setAttribute('role', 'link');
-    labelSpan.setAttribute('aria-label', `Ugrás ide: ${formatTime(time)} – ${label}`);
+    // --- Címke: csak erre kattintva ugrik
+    const labelButton = document.createElement('button');
+    labelButton.textContent = `${formatTime(time)} – ${label}`;
+    labelButton.style.background = 'none';
+    labelButton.style.border = 'none';
+    labelButton.style.textAlign = 'left';
+    labelButton.style.cursor = 'pointer';
+    labelButton.style.flex = '1';
+    labelButton.style.padding = '0';
+    labelButton.setAttribute('aria-label', `Ugrás ide: ${formatTime(time)} – ${label}`);
 
-    labelSpan.addEventListener('click', () => {
+    labelButton.addEventListener('click', (e) => {
+      e.preventDefault();
       audio.currentTime = time;
       audio.play();
     });
 
+    // --- Törlésgomb
     const deleteBtn = document.createElement('button');
     deleteBtn.textContent = '×';
-    deleteBtn.className = 'delete-btn';
     deleteBtn.setAttribute('aria-label', 'Címke törlése');
     deleteBtn.style.background = 'none';
     deleteBtn.style.border = 'none';
@@ -194,12 +200,12 @@ function updateList() {
 
     deleteBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      e.stopPropagation();
+      e.stopPropagation(); // csak biztos, ami biztos
       timestamps.splice(index, 1);
       updateList();
     });
 
-    li.appendChild(labelSpan);
+    li.appendChild(labelButton);
     li.appendChild(deleteBtn);
     timestampList.appendChild(li);
   });

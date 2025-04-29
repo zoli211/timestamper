@@ -160,10 +160,13 @@
       return `${t}\t${t}\t${label}`;
     }
 
-    function updateList() {
+function updateList() {
   timestampList.innerHTML = '';
   timestamps.forEach(({ time, label }, index) => {
     const li = document.createElement('li');
+    li.style.display = 'flex';
+    li.style.justifyContent = 'space-between';
+    li.style.alignItems = 'center';
 
     const labelSpan = document.createElement('span');
     labelSpan.textContent = `${formatTime(time)} – ${label}`;
@@ -172,8 +175,14 @@
     deleteBtn.textContent = '×';
     deleteBtn.className = 'delete-btn';
     deleteBtn.setAttribute('aria-label', 'Törlés');
+    deleteBtn.style.background = 'none';
+    deleteBtn.style.border = 'none';
+    deleteBtn.style.color = '#f88';
+    deleteBtn.style.cursor = 'pointer';
+    deleteBtn.style.fontSize = '1.2rem';
+
     deleteBtn.addEventListener('click', (e) => {
-      e.stopPropagation(); // Ne továbbítódjon az esemény a li-re
+      e.stopPropagation(); // Ez megakadályozza a li-re való továbbterjedést
       timestamps.splice(index, 1);
       updateList();
     });

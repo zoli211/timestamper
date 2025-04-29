@@ -161,24 +161,28 @@
     }
 
     function updateList() {
-      timestampList.innerHTML = '';
-      timestamps.forEach(({ time, label }, index) => {
-        const li = document.createElement('li');
-        li.textContent = `${formatTime(time)} – ${label}`;
+  timestampList.innerHTML = '';
+  timestamps.forEach(({ time, label }, index) => {
+    const li = document.createElement('li');
 
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = '×';
-        deleteBtn.className = 'delete-btn';
-        deleteBtn.setAttribute('aria-label', 'Törlés');
-        deleteBtn.addEventListener('click', () => {
-          timestamps.splice(index, 1);
-          updateList();
-        });
+    const labelSpan = document.createElement('span');
+    labelSpan.textContent = `${formatTime(time)} – ${label}`;
 
-        li.appendChild(deleteBtn);
-        timestampList.appendChild(li);
-      });
-    }
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = '×';
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.setAttribute('aria-label', 'Törlés');
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Ne továbbítódjon az esemény a li-re
+      timestamps.splice(index, 1);
+      updateList();
+    });
+
+    li.appendChild(labelSpan);
+    li.appendChild(deleteBtn);
+    timestampList.appendChild(li);
+  });
+}
 
     timestampButton.addEventListener('click', () => {
       if (audioPlayer.src && !isNaN(audioPlayer.currentTime)) {

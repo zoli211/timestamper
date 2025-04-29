@@ -182,14 +182,19 @@ function updateList() {
     deleteBtn.style.cursor = 'pointer';
     deleteBtn.style.fontSize = '1.2rem';
 
+    // Csak a gombnak van eseményfigyelője
     deleteBtn.addEventListener('click', (e) => {
-      e.stopPropagation(); // Ez megakadályozza a li-re való továbbterjedést
+      e.preventDefault();
       timestamps.splice(index, 1);
       updateList();
     });
 
     li.appendChild(labelSpan);
     li.appendChild(deleteBtn);
+
+    // Ha később szükséged lesz az li-re kattintásra, akkor ott külön kezeled majd:
+    // li.addEventListener('click', (e) => { ... });
+
     timestampList.appendChild(li);
   });
 }

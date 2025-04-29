@@ -168,33 +168,39 @@ function updateList() {
     li.style.display = 'flex';
     li.style.justifyContent = 'space-between';
     li.style.alignItems = 'center';
+    li.style.padding = '0.5rem 0';
 
     const labelSpan = document.createElement('span');
     labelSpan.textContent = `${formatTime(time)} – ${label}`;
+    labelSpan.style.cursor = 'pointer';
+    labelSpan.tabIndex = 0;
+    labelSpan.setAttribute('role', 'link');
+    labelSpan.setAttribute('aria-label', `Ugrás ide: ${formatTime(time)} – ${label}`);
+
+    labelSpan.addEventListener('click', () => {
+      audio.currentTime = time;
+      audio.play();
+    });
 
     const deleteBtn = document.createElement('button');
     deleteBtn.textContent = '×';
     deleteBtn.className = 'delete-btn';
-    deleteBtn.setAttribute('aria-label', 'Törlés');
+    deleteBtn.setAttribute('aria-label', 'Címke törlése');
     deleteBtn.style.background = 'none';
     deleteBtn.style.border = 'none';
     deleteBtn.style.color = '#f88';
     deleteBtn.style.cursor = 'pointer';
     deleteBtn.style.fontSize = '1.2rem';
 
-    // Csak a gombnak van eseményfigyelője
     deleteBtn.addEventListener('click', (e) => {
       e.preventDefault();
+      e.stopPropagation();
       timestamps.splice(index, 1);
       updateList();
     });
 
     li.appendChild(labelSpan);
     li.appendChild(deleteBtn);
-
-    // Ha később szükséged lesz az li-re kattintásra, akkor ott külön kezeled majd:
-    // li.addEventListener('click', (e) => { ... });
-
     timestampList.appendChild(li);
   });
 }

@@ -2,22 +2,59 @@
 <html lang="hu">
 <head>
   <meta charset="UTF-8">
-  <title>Hangfájl időbélyegző</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hangfájl címkéző</title>
   <style>
     body {
-      font-family: sans-serif;
-      margin: 2em;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
       background-color: #121212;
-      color: #e0e0e0;
+      color: #f1f1f1;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
-    button, input[type="text"], input[type="file"] {
-      margin-top: 0.5em;
-      padding: 0.5em;
-      background-color: #1f1f1f;
-      color: #e0e0e0;
-      border: 1px solid #444;
-      border-radius: 4px;
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    audio {
+      width: 100%;
+      margin-top: 1rem;
+    }
+
+    label, input, button, select, textarea {
+      font-size: 1rem;
+    }
+
+    input[type="file"],
+    input[type="text"],
+    select,
+    button {
+      width: 100%;
+      padding: 0.75rem;
+      background-color: #1e1e1e;
+      color: white;
+      border: 1px solid #333;
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+
+    button {
+      cursor: pointer;
+      transition: background-color 0.3s;
     }
 
     button:hover {
@@ -25,160 +62,154 @@
     }
 
     ul {
-      list-style-type: none;
+      list-style: none;
       padding: 0;
+      margin: 0.5rem 0;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #333;
+      border-radius: 6px;
     }
 
     li {
-      margin: 4px 0;
+      padding: 0.5rem;
+      border-bottom: 1px solid #333;
+      word-break: break-word;
     }
 
-    audio {
-      width: 100%;
-      margin: 1em 0;
+    .file-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-direction: column;
     }
 
-    #speedControl {
-      margin-top: 1em;
+    @media (min-width: 480px) {
+      .file-group {
+        flex-direction: row;
+        align-items: center;
+      }
+      .file-group input[type="file"] {
+        flex: 1;
+      }
     }
   </style>
 </head>
 <body>
+  <h1>Hangfájl címkéző</h1>
+  <div class="container">
+    <div class="file-group">
+      <input type="file" id="audioFile" accept="audio/*">
+      <input type="file" id="labelFile" accept=".txt">
+    </div>
+    <audio id="audioPlayer" controls></audio>
 
-  <h1>Hangfájl időbélyegző</h1>
-
-  <input type="file" id="fileInput" accept="audio/*"><br>
-  <audio id="audioPlayer" controls></audio><br>
-
-  <label for="labelInput">Címkenév:</label>
-  <input type="text" id="labelInput" placeholder="hiba">
-  <br>
-
-  <button id="timestampButton">Időbélyeg rögzítése</button>
-  <button id="exportButton">Exportálás (Audacity TXT)</button>
-  <br>
-  <input type="file" id="importInput" accept=".txt">
-  <br>
-
-  <label for="speedControl">Lejátszási sebesség:</label>
-  <input type="range" id="speedControl" min="0.5" max="2" step="0.1" value="1">
-  <span id="speedDisplay">1.0x</span>
-
-  <div id="timestamps">
-    <h2>Időbélyegek</h2>
+    <input type="text" id="labelInput" placeholder="Címkenév (Enterrel is menthető)">
+    <button id="timestampButton">Időbélyeg rögzítése</button>
+    <select id="speedSelect">
+      <option value="1">Sebesség: 1x</option>
+      <option value="1.25">1.25x</option>
+      <option value="1.5">1.5x</option>
+      <option value="2">2x</option>
+    </select>
     <ul id="timestampList"></ul>
+    <button id="exportButton">Címkék exportálása (.txt)</button>
   </div>
 
   <script>
-    const fileInput = document.getElementById('fileInput');
+    const audioFileInput = document.getElementById('audioFile');
+    const labelFileInput = document.getElementById('labelFile');
     const audioPlayer = document.getElementById('audioPlayer');
+    const labelInput = document.getElementById('labelInput');
     const timestampButton = document.getElementById('timestampButton');
     const exportButton = document.getElementById('exportButton');
     const timestampList = document.getElementById('timestampList');
-    const labelInput = document.getElementById('labelInput');
-    const importInput = document.getElementById('importInput');
-    const speedControl = document.getElementById('speedControl');
-    const speedDisplay = document.getElementById('speedDisplay');
+    const speedSelect = document.getElementById('speedSelect');
 
     let timestamps = [];
-    let audioFileName = "audacity_cimkek";
+    let currentAudioFileName = 'cimkek';
 
-    audioPlayer.preservesPitch = true;
+    function formatTime(seconds) {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = Math.floor(seconds % 60);
+      return `${h.toString().padStart(2, '0')}.${m.toString().padStart(2, '0')}.${s.toString().padStart(2, '0')}`;
+    }
 
-    fileInput.addEventListener('change', function () {
-      const file = fileInput.files[0];
-      if (file) {
-        const url = URL.createObjectURL(file);
-        audioPlayer.src = url;
-        audioFileName = file.name.replace(/\.[^/.]+$/, ""); // remove extension
-        timestamps = [];
-        timestampList.innerHTML = "";
+    function formatForAudacity(seconds, label) {
+      const t = seconds.toFixed(6);
+      return `${t}\t${t}\t${label}`;
+    }
+
+    function updateList() {
+      timestampList.innerHTML = '';
+      timestamps.forEach(({ time, label }) => {
+        const li = document.createElement('li');
+        li.textContent = `${formatTime(time)} – ${label}`;
+        timestampList.appendChild(li);
+      });
+    }
+
+    timestampButton.addEventListener('click', () => {
+      if (audioPlayer.src && !isNaN(audioPlayer.currentTime)) {
+        const label = labelInput.value.trim() || 'hiba';
+        timestamps.push({ time: audioPlayer.currentTime, label });
+        labelInput.value = '';
+        updateList();
       }
     });
 
-    timestampButton.addEventListener('click', function () {
-      const currentTime = audioPlayer.currentTime;
-      const label = labelInput.value.trim() || "hiba";
-      timestamps.push({ time: currentTime, label });
-
-      const li = document.createElement('li');
-      li.textContent = `${formatClockTime(currentTime)} – ${label}`;
-      timestampList.appendChild(li);
-
-      labelInput.value = ""; // clear input after saving
+    labelInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        timestampButton.click();
+      }
     });
 
-    exportButton.addEventListener('click', function () {
-      if (timestamps.length === 0) return;
-
-      const lines = timestamps.map(entry => {
-        const fixed = entry.time.toFixed(6);
-        return `${fixed}\t${fixed}\t${entry.label}`;
-      });
-
-      const content = lines.join('\n');
-      const blob = new Blob([content], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-
+    exportButton.addEventListener('click', () => {
+      const txtContent = timestamps.map(t => formatForAudacity(t.time, t.label)).join('\n');
+      const blob = new Blob([txtContent], { type: 'text/plain' });
       const a = document.createElement('a');
-      a.href = url;
-      a.download = `${audioFileName}.txt`;
+      a.href = URL.createObjectURL(blob);
+      a.download = `${currentAudioFileName.replace(/\.[^/.]+$/, "")}_cimkek.txt`;
       a.click();
-
-      URL.revokeObjectURL(url);
     });
 
-    importInput.addEventListener('change', function () {
-      const file = importInput.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        const content = e.target.result;
-        const lines = content.trim().split('\n');
+    audioFileInput.addEventListener('change', () => {
+      const file = audioFileInput.files[0];
+      if (file) {
+        audioPlayer.src = URL.createObjectURL(file);
+        currentAudioFileName = file.name;
         timestamps = [];
-        timestampList.innerHTML = "";
+        updateList();
+      }
+    });
 
-        let lastTime = 0;
-        lines.forEach(line => {
-          const [start, , label] = line.split('\t');
-          const time = parseFloat(start);
-          if (!isNaN(time)) {
-            timestamps.push({ time, label });
-            const li = document.createElement('li');
-            li.textContent = `${formatClockTime(time)} – ${label}`;
-            timestampList.appendChild(li);
-            if (time > lastTime) lastTime = time;
+    labelFileInput.addEventListener('change', () => {
+      const file = labelFileInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const lines = reader.result.split('\n');
+          timestamps = lines
+            .map(line => line.trim())
+            .filter(Boolean)
+            .map(line => {
+              const parts = line.split('\t');
+              return { time: parseFloat(parts[0]), label: parts[2] || 'hiba' };
+            });
+          updateList();
+          if (timestamps.length > 0) {
+            audioPlayer.currentTime = timestamps[timestamps.length - 1].time;
           }
-        });
-
-        // Ugrás az utolsó időbélyeghez
-        audioPlayer.currentTime = lastTime;
-      };
-      reader.readAsText(file);
+        };
+        reader.readAsText(file);
+      }
     });
 
-    speedControl.addEventListener('input', function () {
-      const rate = parseFloat(speedControl.value);
-      audioPlayer.playbackRate = rate;
-      speedDisplay.textContent = `${rate.toFixed(1)}x`;
+    speedSelect.addEventListener('change', () => {
+      audioPlayer.playbackRate = parseFloat(speedSelect.value);
+      audioPlayer.preservesPitch = true;
     });
-
-    function formatClockTime(seconds) {
-      const hrs = Math.floor(seconds / 3600);
-      const mins = Math.floor((seconds % 3600) / 60);
-      const secs = Math.floor(seconds % 60);
-      return `${hrs}.${mins.toString().padStart(2, '0')}.${secs.toString().padStart(2, '0')}`;
-    }
-
-labelInput.addEventListener('keydown', function (e) {
-  if (e.key === 'Enter') {
-    e.preventDefault(); // ne küldje el űrlapként, ha formban van
-    timestampButton.click();
-  }
-});
-
   </script>
-
 </body>
 </html>

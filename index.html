@@ -102,17 +102,19 @@
       <label for="labelFile">Címkefájl kiválasztása</label> <input type="file" id="labelFile" accept=".txt">
     </div>
     <audio id="audioPlayer" controls></audio>
-
-    <input type="text" id="labelInput" placeholder="Címkenév (Enterrel is menthető)">
-    <button id="timestampButton">Időbélyeg rögzítése</button>
+    <label for="speedSelect">Sebesség</label>
     <select id="speedSelect">
-      <option value="1">Sebesség: 1x</option>
+      <option value="1">1x</option>
       <option value="1.25">1.25x</option>
       <option value="1.5">1.5x</option>
       <option value="2">2x</option>
     </select>
+
+    <label for="labelInput">Címke neve (üres mező esetén = hiba)</label><input type="text" id="labelInput" placeholder="Hiba">
+    <button id="timestampButton">Időbélyeg rögzítése</button>
+<h2>Időbélyegek listája</h2>
     <ul id="timestampList"></ul>
-    <button id="exportButton">Címkék exportálása (.txt)</button>
+    <button id="exportButton">Audacity Címkék exportálása (.txt)</button>
   </div>
 
   <script>

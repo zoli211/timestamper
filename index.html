@@ -374,10 +374,8 @@ window.addEventListener('click', (e) => {
   }
 });
 
-// Nyers export gomb
-const rawExportButton = document.createElement('button');
-rawExportButton.textContent = 'Címkék exportálása (nyers .txt)';
-rawExportButton.addEventListener('click', () => {
+// Nyers export gomb eseménykezelő
+document.getElementById('rawExportButton').addEventListener('click', () => {
   const rawContent = timestamps.map(t => `${formatTime(t.time)} – ${t.label}`).join('\n');
   const blob = new Blob([rawContent], { type: 'text/plain' });
   const a = document.createElement('a');
@@ -385,7 +383,6 @@ rawExportButton.addEventListener('click', () => {
   a.download = `${currentAudioFileName.replace(/\.[^/.]+$/, "")}_nyers_cimkek.txt`;
   a.click();
 });
-
   </script>
 </body>
 </html>

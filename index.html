@@ -135,11 +135,13 @@
 }
 
 .close {
+  background: none;
+  border: none;
   color: #aaa;
-  float: right;
   font-size: 1.5rem;
   font-weight: bold;
   cursor: pointer;
+  float: right;
 }
 
 .close:hover {
@@ -154,7 +156,7 @@
 
 <div id="helpModal" class="modal">
   <div class="modal-content">
-    <span aria-label="Bezárás" class="close" id="closeModal">&times;</span>
+    <button id="closeModal" aria-label="Bezárás" class="close">&times;</button>
     <h2>🔹 Súgó – Hangfájl címkéző használata</h2>
     <p>
       1. Válassz ki egy hangfájlt.<br>

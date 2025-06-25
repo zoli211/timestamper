@@ -373,6 +373,52 @@
         closeHelpModal();
       }
     });
+  
+  // Gyorsgombok
+  document.addEventListener('keydown', (e) => {
+  const isModalOpen = document.getElementById('helpModal').style.display === 'block';
+  if (isModalOpen) return;
+
+  const tag = document.activeElement.tagName.toLowerCase();
+  const isTyping = ['input', 'textarea', 'select'].includes(tag);
+  if (isTyping) return; // Ha beviteli mezőben vagyunk, ne csináljon semmit
+
+  const audio = audioPlayer;
+
+  switch (e.key.toLowerCase()) {
+    case 'k':
+      e.preventDefault();
+      audio.paused ? audio.play() : audio.pause();
+      break;
+
+    case 'h':
+      e.preventDefault();
+      timestampButton.click();
+      break;
+
+    case 'arrowright':
+      e.preventDefault();
+      audio.currentTime += e.shiftKey ? 15 : 5;
+      break;
+
+    case 'arrowleft':
+      e.preventDefault();
+      audio.currentTime = Math.max(0, audio.currentTime - (e.shiftKey ? 15 : 5));
+      break;
+
+    case 'o':
+      e.preventDefault();
+      audioFileInput.click();
+      break;
+
+    case ' ':
+      e.preventDefault();
+      labelInput.focus();
+      break;
+  }
+});
+
+  
   </script>
 </body>
 </html>

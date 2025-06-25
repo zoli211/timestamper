@@ -130,7 +130,8 @@
   </style>
 </head>
 <body>
-  
+<audio id="typingSound" src="typing-sound.mp3" preload="auto"></audio>
+
   <h1>Hangfájl címkéző</h1>
   <button id="helpButton">Súgó</button>
 
@@ -145,12 +146,49 @@
         3. Játsszd le a hangot, és ha hibát észlelsz, nyomd meg az „Időbélyeg rögzítése” gombot. Megjegyzést írni nem kötelező, ekkor az időbélyeg mellett a sima "hiba" felirat lesz olvasható.<br>
         4. A címkék listája alul jelenik meg, aktiválva őket a jelölt időre ugrik a hangfájl. Az időbélyeg után található gombbal törölni is tudod az időbélyeget.<br>
         5. Kétféleképpen exportálhatsz:<br>
-          • „Címkék exportálása (nyers)” → egyszerű, idő + címke szöveg<br>
-          • „Audacity Címkék exportálása” → kompatibilis Audacity formátummal (.txt)
+<ul>
+<li>„Címkék exportálása (nyers)” → egyszerű, idő + címke szöveg</li>
+<li>„Audacity Címkék exportálása” → kompatibilis Audacity formátummal (.txt)</li>
+</ul
       </p>
+<h2>🎹 Gyorsbillentyűk használata</h2>
+
+<p>A következő billentyűparancsokat használhatod a gyorsabb navigációhoz és címkézéshez. A használatukhoz előbb üss entert a gyorsgombok használata csak olvasható szerkesztőmezőbe::</p>
+<h3>🎯 Alap billentyűk</h3>
+<ul>
+  <li><strong>O</strong> – Hangfájl betallózása</li>
+  <li><strong>K</strong> – Lejátszás / Szünet</li>
+  <li><strong>H</strong> – Hiba rögzítése a jelenlegi időpontra, a címke egyszerűen "hiba" lesz az időbélyeg mellett</li>
+  <li><strong>Szóköz</strong> – Megjelenik egy szerkesztőmező, ahová írva megadhatod a rögzíteni kívánt hiba címkéjét, pl. dupla kopogás, erős háttérzaj. Rögzítéshez nyomj entert</li>
+</ul>
+
+<h3>⏩ Ugrás az időben:</h3>
+<ul>
+  <li><strong>Jobbra nyíl (→)</strong> – Előre 5 másodperc</li>
+  <li><strong>Balra nyíl (←)</strong> – Vissza 5 másodperc</li>
+  <li><strong>Shift + →</strong> – Előre 15 másodperc</li>
+  <li><strong>Shift + ←</strong> – Vissza 15 másodperc</li>
+  <li><strong>Ctrl + →</strong> – Előre 30 másodperc</li>
+  <li><strong>Ctrl + ←</strong> – Vissza 30 másodperc</li>
+</ul>
+
+<h3>🛠️ Egyéb:</h3>
+<ul>
+  <li><strong>I</strong> – A lejátszás aktuális idejének felolvastatása</li>
+  <li><strong>Számok (1–4)</strong> – Lejátszási sebesség állítása:
+    <ul>
+      <li><strong>1</strong> = 1×</li>
+      <li><strong>2</strong> = 1.25×</li>
+      <li><strong>3</strong> = 1.5×</li>
+      <li><strong>4</strong> = 2×</li>
+    </ul>
+  </li>
+</ul>
+<p>Jó hangoskönyv hallgatást és kevés hibát kívánunk!</p>
     </div>
   </div>
-<input id="focusTrap" type="text" style="position: absolute; left: -10000px;" value="Gyorsgombok aktiválása" readonly="true">
+<input id="focusTrap" type="text" style="position: absolute; left: -10000px;" value="Gyorsgombok használata" readonly="true">
+<input type="text" id="tempInput" style="display:none;">
   <!-- Fő tartalom -->
   <div class="container" id="mainContent">
     <div class="file-group">
@@ -169,6 +207,8 @@
 
     <label for="labelInput">Címke neve (üres mező esetén = hiba)</label><input type="text" id="labelInput" placeholder="Hiba">
     <button id="timestampButton">Időbélyeg rögzítése</button>
+<div id="liveRegion" role="status" style="position:absolute; left:-9999px; height:1px; overflow:hidden;"></div>  
+
     <h2>Időbélyegek listája</h2>
     <ul id="timestampList"></ul>
     <button id="rawExportButton">Címkék exportálása (nyers .txt)</button>
@@ -252,15 +292,20 @@
       });
     }
 
-    timestampButton.addEventListener('click', () => {
-      if (audioPlayer.src && !isNaN(audioPlayer.currentTime)) {
-        const label = labelInput.value.trim() || 'hiba';
-        timestamps.push({ time: audioPlayer.currentTime, label });
-        labelInput.value = '';
-        updateList();
-      document.getElementById('focusTrap').focus();
-      }
-    });
+timestampButton.addEventListener('click', () => {
+  if (audioPlayer.src && !isNaN(audioPlayer.currentTime)) {
+    const label = labelInput.value.trim() || 'hiba';
+    timestamps.push({ time: audioPlayer.currentTime, label });
+    labelInput.value = '';
+    updateList();
+
+    const liveRegion = document.getElementById('liveRegion');
+    liveRegion.textContent = '';
+    setTimeout(() => {
+      liveRegion.textContent = `${label} rögzítve`;
+    }, 50);
+  }
+});
 
     labelInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
@@ -376,17 +421,46 @@
       }
     });
   
-  // Gyorsgombok
-  document.addEventListener('keydown', (e) => {
+// Gyorsgombok
+document.addEventListener('keydown', (e) => {
   const isModalOpen = document.getElementById('helpModal').style.display === 'block';
   if (isModalOpen) return;
 
   const tag = document.activeElement.tagName.toLowerCase();
   const isFocusTrap = document.activeElement.id === 'focusTrap';
-const isTyping = ['input', 'textarea', 'select'].includes(tag) && !isFocusTrap;
-if (isTyping) return;
+  const isTyping = ['input', 'textarea', 'select'].includes(tag) && !isFocusTrap;
 
+  const liveRegion = document.getElementById('liveRegion');
   const audio = audioPlayer;
+
+  // Enter/Escape az ideiglenes mezőben
+  if (document.activeElement.id === 'tempInput') {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const tempInput = document.getElementById('tempInput');
+      const label = tempInput.value.trim() || 'hiba';
+      timestamps.push({ time: audio.currentTime, label });
+      updateList();
+
+      liveRegion.textContent = '';
+      setTimeout(() => {
+        liveRegion.textContent = `${label} rögzítve`;
+      }, 50);
+
+      tempInput.style.display = 'none';
+      document.getElementById('focusTrap').focus();
+    }
+
+    if (e.key === 'Escape') {
+      document.getElementById('tempInput').style.display = 'none';
+      document.getElementById('focusTrap').focus();
+    }
+
+    return;
+  }
+
+  // Ha gépel, ne csináljunk semmit
+  if (isTyping) return;
 
   switch (e.key.toLowerCase()) {
     case 'k':
@@ -399,15 +473,16 @@ if (isTyping) return;
       timestampButton.click();
       break;
 
-    case 'arrowright':
-      e.preventDefault();
-      audio.currentTime += e.shiftKey ? 15 : 5;
-      break;
+case 'arrowright':
+  e.preventDefault();
+  audio.currentTime += e.ctrlKey ? 30 : e.shiftKey ? 15 : 5;
+  break;
 
-    case 'arrowleft':
-      e.preventDefault();
-      audio.currentTime = Math.max(0, audio.currentTime - (e.shiftKey ? 15 : 5));
-      break;
+case 'arrowleft':
+  e.preventDefault();
+  const jumpBack = e.ctrlKey ? 30 : e.shiftKey ? 15 : 5;
+  audio.currentTime = Math.max(0, audio.currentTime - jumpBack);
+  break;
 
     case 'o':
       e.preventDefault();
@@ -416,10 +491,64 @@ if (isTyping) return;
 
     case ' ':
       e.preventDefault();
-      labelInput.focus();
+      const tempInput = document.getElementById('tempInput');
+      tempInput.style.display = 'block';
+      tempInput.value = '';
+      tempInput.focus();
+      document.getElementById('typingSound').play().catch(() => {});
+      break;
+
+case 'i':
+  e.preventDefault();
+  const currentFormatted = formatTime(audio.currentTime);
+  liveRegion.textContent = '';
+  setTimeout(() => {
+    liveRegion.textContent = currentFormatted;
+  }, 50);
+  break;
+
+    case '1':
+      e.preventDefault();
+      audio.playbackRate = 1;
+      speedSelect.value = '1';
+      liveRegion.textContent = '';
+      setTimeout(() => {
+        liveRegion.textContent = 'Sebesség 1-szeres';
+      }, 50);
+      break;
+
+    case '2':
+      e.preventDefault();
+      audio.playbackRate = 1.25;
+      speedSelect.value = '1.25';
+      liveRegion.textContent = '';
+      setTimeout(() => {
+        liveRegion.textContent = 'Sebesség 1.25-szörös';
+      }, 50);
+      break;
+
+    case '3':
+      e.preventDefault();
+      audio.playbackRate = 1.5;
+      speedSelect.value = '1.5';
+      liveRegion.textContent = '';
+      setTimeout(() => {
+        liveRegion.textContent = 'Sebesség 1.5-szörös';
+      }, 50);
+      break;
+
+    case '4':
+      e.preventDefault();
+      audio.playbackRate = 2;
+      speedSelect.value = '2';
+      liveRegion.textContent = '';
+      setTimeout(() => {
+        liveRegion.textContent = 'Sebesség 2-szeres';
+      }, 50);
       break;
   }
 });
+
 
     document.getElementById('enterFormModeButton').addEventListener('click', () => {
   document.getElementById('focusTrap').focus();

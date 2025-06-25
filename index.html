@@ -130,6 +130,7 @@
   </style>
 </head>
 <body>
+  <input id="focusTrap" type="text" style="position: absolute; left: -10000px;" aria-hidden="true">
   <h1>Hangfájl címkéző</h1>
   <button id="helpButton">Súgó</button>
 
@@ -149,7 +150,7 @@
       </p>
     </div>
   </div>
-
+<button id="enterFormModeButton">Gyorsgombok aktiválása</button>
   <!-- Fő tartalom -->
   <div class="container" id="mainContent">
     <div class="file-group">
@@ -257,6 +258,7 @@
         timestamps.push({ time: audioPlayer.currentTime, label });
         labelInput.value = '';
         updateList();
+      document.getElementById('focusTrap').focus();
       }
     });
 
@@ -380,8 +382,9 @@
   if (isModalOpen) return;
 
   const tag = document.activeElement.tagName.toLowerCase();
-  const isTyping = ['input', 'textarea', 'select'].includes(tag);
-  if (isTyping) return; // Ha beviteli mezőben vagyunk, ne csináljon semmit
+  const isFocusTrap = document.activeElement.id === 'focusTrap';
+const isTyping = ['input', 'textarea', 'select'].includes(tag) && !isFocusTrap;
+if (isTyping) return;
 
   const audio = audioPlayer;
 
@@ -418,6 +421,11 @@
   }
 });
 
+    document.getElementById('enterFormModeButton').addEventListener('click', () => {
+  document.getElementById('focusTrap').focus();
+});
+    
+    // Gyorsgombok vége
   
   </script>
 </body>

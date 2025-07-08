@@ -133,7 +133,20 @@
 <audio id="typingSound" src="typing-sound.mp3" preload="auto"></audio>
 
   <h1>Hangfájl címkéző</h1>
+  <!-- Fő tartalom -->
+  <div class="container" id="mainContent">
+
   <button id="helpButton">Súgó</button>
+
+<!-- Visszatöltés modal -->
+<div id="restoreModal" class="modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="restoreTitle">
+  <div class="modal-content">
+    <h2 id="restoreTitle">Visszatöltés</h2>
+    <p>Korábban már dolgoztál egy ugyanilyen nevű hangfájllal. Visszatöltsük a korábbi címkéket és pozíciót?</p>
+    <button id="restoreYes">Igen</button>
+    <button id="restoreNo">Nem, törölhető</button>
+  </div>
+</div>
 
   <!-- Súgó modal -->
   <div id="helpModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true">
@@ -193,16 +206,20 @@ Vágók<br>
       <li><strong>3</strong> = 1.5×</li>
       <li><strong>4</strong> = 1.75×</li>
       <li><strong>5</strong> = 2×</li>
-    </ul>
-  </li>
+            <li><strong>6</strong> = 2.25×</li>
+      <li><strong>7</strong> = 2.5×</li>
+      <li><strong>8</strong> = 2.75×</li>
+      <li><strong>9</strong> = 3×</li>
+
+      ul>
+  
+    </li>
 </ul>
 <p>Jó hangoskönyv hallgatást és kevés hibát kívánunk!</p>
     </div>
   </div>
 <input id="focusTrap" type="text" style="position: absolute; left: -10000px;" value="Gyorsgombok használata" readonly="true">
 <input type="text" id="tempInput" style="display:none;">
-  <!-- Fő tartalom -->
-  <div class="container" id="mainContent">
     <div class="file-group">
       <label for="audioFile">Hangfájl kiválasztása</label> <input type="file" id="audioFile">
       <label for="labelFile">Címkefájl kiválasztása</label> <input type="file" id="labelFile" accept=".txt">
@@ -216,7 +233,11 @@ Vágók<br>
       <option value="1.5">1.5x</option>
       <option value="1.75">1.75x</option>
       <option value="2">2x</option>
-    </select>
+          <option value="2.25">2.25x</option>
+          <option value="2.5">2.5x</option>
+              <option value="2.75">2.75x</option>
+              <option value="3">3x</option>
+            </select>
 
     <label for="labelInput">Címke neve (üres mező esetén = hiba)</label><input type="text" id="labelInput" placeholder="Hiba">
     <button id="timestampButton">Időbélyeg rögzítése</button>
@@ -318,6 +339,12 @@ timestampButton.addEventListener('click', () => {
       liveRegion.textContent = `${label} rögzítve`;
     }, 50);
   }
+const data = {
+  position: audioPlayer.currentTime,
+  timestamps: timestamps
+};
+localStorage.setItem(`audio-${currentAudioFileName}`, JSON.stringify(data));
+
 });
 
     labelInput.addEventListener('keydown', e => {
@@ -345,15 +372,21 @@ timestampButton.addEventListener('click', () => {
       a.click();
     });
 
-    audioFileInput.addEventListener('change', () => {
-      const file = audioFileInput.files[0];
-      if (file) {
-        audioPlayer.src = URL.createObjectURL(file);
-        currentAudioFileName = file.name;
-        timestamps = [];
-        updateList();
-      }
-    });
+audioFileInput.addEventListener('change', () => {
+  const file = audioFileInput.files[0];
+  if (!file) return;
+
+  const fileName = file.name;
+  const savedData = localStorage.getItem(`audio-${fileName}`);
+
+  if (savedData) {
+    // Van elmentett adat – felajánljuk a visszatöltést
+    showRestoreModal(file, savedData);
+  } else {
+    // Nincs korábbi adat – betöltjük simán
+    loadAudio(file);
+  }
+});
 
     labelFileInput.addEventListener('change', () => {
       const file = labelFileInput.files[0];
@@ -569,6 +602,47 @@ case 'i':
         liveRegion.textContent = 'Sebesség 2-szeres';
       }, 50);
       break;
+  
+  case '6':
+      e.preventDefault();
+      audio.playbackRate = 2.25;
+      speedSelect.value = '2.25';
+      liveRegion.textContent = '';
+      setTimeout(() => {
+        liveRegion.textContent = 'Sebesség 2.25-szörös';
+      }, 50);
+      break;
+  
+case '7':
+      e.preventDefault();
+      audio.playbackRate = 2.5;
+      speedSelect.value = '2.5';
+      liveRegion.textContent = '';
+      setTimeout(() => {
+        liveRegion.textContent = 'Sebesség 2.5-szörös';
+      }, 50);
+      break;
+
+case '8':
+      e.preventDefault();
+      audio.playbackRate = 2.75;
+      speedSelect.value = '2.75';
+      liveRegion.textContent = '';
+      setTimeout(() => {
+        liveRegion.textContent = 'Sebesség 2.75-szörös';
+      }, 50);
+      break;
+
+case '9':
+      e.preventDefault();
+      audio.playbackRate = 3;
+      speedSelect.value = '3';
+      liveRegion.textContent = '';
+      setTimeout(() => {
+        liveRegion.textContent = 'Sebesség 3-szoros';
+      }, 50);
+      break;
+
   }
 });
 
@@ -578,6 +652,100 @@ case 'i':
 });
     
     // Gyorsgombok vége
+
+
+
+function loadAudio(file, restoredData = null) {
+  audioPlayer.src = URL.createObjectURL(file);
+  currentAudioFileName = file.name;
+  timestamps = restoredData?.timestamps || [];
+
+  updateList();
+
+  audioPlayer.onloadedmetadata = () => {
+    if (restoredData?.position) {
+      audioPlayer.currentTime = restoredData.position;
+    }
+  };
+}
+
+setInterval(() => {
+  if (!currentAudioFileName || audioPlayer.paused) return;
+
+  const data = {
+    position: audioPlayer.currentTime,
+    timestamps: timestamps
+  };
+  localStorage.setItem(`audio-${currentAudioFileName}`, JSON.stringify(data));
+}, 10000);
+
+function showRestoreModal(file, savedData) {
+  const modal = document.getElementById('restoreModal');
+  const yesBtn = document.getElementById('restoreYes');
+  const noBtn = document.getElementById('restoreNo');
+  const mainContent = document.getElementById('mainContent');
+
+  modal.style.display = 'block';
+  modal.setAttribute('aria-hidden', 'false');
+  mainContent.setAttribute('aria-hidden', 'true');
+
+  const onYes = () => {
+    loadAudio(file, JSON.parse(savedData));
+    cleanup();
+  };
+
+  const onNo = () => {
+    loadAudio(file);
+    cleanup();
+  };
+
+  yesBtn.addEventListener('click', onYes);
+  noBtn.addEventListener('click', onNo);
+
+  // Fókuszcsapda beállítása
+  const focusableEls = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  const first = focusableEls[0];
+  const last = focusableEls[focusableEls.length - 1];
+  first.focus();
+
+  function trapFocus(e) {
+    if (e.key === 'Escape') {
+      cleanup();
+    } else if (e.key === 'Tab') {
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  }
+
+  modal.addEventListener('keydown', trapFocus);
+
+  function cleanup() {
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+    mainContent.removeAttribute('aria-hidden');
+
+    yesBtn.removeEventListener('click', onYes);
+    noBtn.removeEventListener('click', onNo);
+    modal.removeEventListener('keydown', trapFocus);
+
+    // Fókusz vissza az audioFile inputra
+    document.getElementById('audioFile').focus();
+  }
+
+  // Bezárás kattintásra a háttérre
+  window.addEventListener('click', function outsideClick(e) {
+    if (e.target === modal) {
+      cleanup();
+      window.removeEventListener('click', outsideClick);
+    }
+  });
+}
+
   
   </script>
 </body>
